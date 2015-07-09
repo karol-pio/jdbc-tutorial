@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import com.acme.order.pizza.PizzaOrder;
@@ -28,12 +30,14 @@ public class JdbcOrderRepository implements OrderRepository {
 
 	private final String password = "dbpass";
 
+	private JdbcTemplate jdbcTemplate;
+
 	final String SQL = "SELECT o.id as order_id,o.customer_id as customer_id,o.status,o.type,o.estimatedDeliveryTime,"
 			+ "o.finishTime,c.name,c.email,c.address from order_t o,customer_t c where o.customer_id = c.id";
 
-	@Autowired
-	private DataSource ds;
-	
+	// @Autowired
+	// private DataSource ds;
+
 	@Override
 	public String save(PizzaOrder order) {
 		// TODO Auto-generated method stub
@@ -46,81 +50,43 @@ public class JdbcOrderRepository implements OrderRepository {
 
 	}
 
+	@Autowired
+	public void init(DataSource dataSource) {
+		this.jdbcTemplate = new JdbcTemplate(dataSource);
+	}
+
 	@Override
 	public PizzaOrder get(String pizzaOrderId) {
-		// TODO Auto-generated method stub
+		// int countOfActorsNamedJoe = this.jdbcTemplate.queryForObject(
+		// "select count(*) from t_actor where first_name = ?", Integer.class,
+		// "Joe");
+
+		Customer customer = this.jdbcTemplate.queryForObject("select * from customer_t where id = ?",
+				new RowMapper<Customer>() {
+
+					@Override
+					public Customer mapRow(ResultSet rs, int rowNum) throws SQLException {
+
+						int id = rs.getInt("id");
+						String name = rs.getString("name");
+						String email = rs.getString("email");
+						String address = rs.getString("address");
+
+						String customerId = Integer.toString(id);
+						Customer c = new Customer(customerId, name, email, address);
+						return c;
+					}
+
+				}, "1");
+
+		System.out.println("Customer from database: " + customer);
+
 		return null;
 	}
 
 	@Override
 	public List<PizzaOrder> findAll() {
-		Connection conn = null;
-		Statement stmt = null;
-		
-		try {
 
-			// STEP 3: Open a connection
-			System.out.println("Connecting to database...");
-//			conn = DriverManager.getConnection(url, user, password);
-			conn = ds.getConnection();
-			// STEP 4: Execute a query
-			System.out.println("Creating statement...");
-			stmt = conn.createStatement();
-			String sql;
-			sql = "SELECT id, customer_id, estimatedDeliveryTime, finishTime FROM order_t";
-			ResultSet rs = stmt.executeQuery(sql);
-
-			// STEP 5: Extract data from result set
-			while (rs.next()) {
-				
-//				PizzaOrder pizzaOrder = new PizzaOrder(customer, pizzaType)
-				// Retrieve by column name
-				int id = rs.getInt("id");
-				int age = rs.getInt("customer_id");
-				String first = rs.getString("estimatedDeliveryTime");
-				String last = rs.getString("finishTime");
-
-				// Display values
-				System.out.print("id: " + id);
-				System.out.print(", customer_id: " + age);
-				System.out.print(", estimatedDeliveryTime: " + first);
-				System.out.println(", finishTime: " + last);
-			}
-			// STEP 6: Clean-up environment
-			rs.close();
-			stmt.close();
-			conn.close();
-		} catch (
-
-		SQLException se)
-
-		{
-			// Handle errors for JDBC
-			se.printStackTrace();
-		} catch (
-
-		Exception e)
-
-		{
-			// Handle errors for Class.forName
-			e.printStackTrace();
-		} finally
-
-		{
-			// finally block used to close resources
-			try {
-				if (stmt != null)
-					stmt.close();
-			} catch (SQLException se2) {
-			} // nothing we can do
-			try {
-				if (conn != null)
-					conn.close();
-			} catch (SQLException se) {
-				se.printStackTrace();
-			} // end finally try
-		} // end try
-		System.out.println("GoodBye");
 		return null;
 
 	}

@@ -35,7 +35,8 @@ public class SpringAnnotationBasedApplication {
 
 		OrderRepository orderRepository = ctx.getBean(JdbcOrderRepository.class);
 		
-		orderRepository.findAll();
+//		orderRepository.findAll();
+		orderRepository.get("1");
 //
 //		String orderId1 = orderService.createOrder(customer1, PizzaType.LARGE);
 //		String orderId2 = orderService.createOrder(customer2, PizzaType.SMALL);
